@@ -1,10 +1,18 @@
 {
   "name": "knowledge-definitive",
   "private": true,
-  "workspaces": ["apps/web", "apps/api", "packages/ui"],
+  "workspaces": [
+    "apps/web",
+    "apps/api",
+    "packages/ui"
+  ],
   "scripts": {
     "install:all": "npm install --workspaces",
     "lint": "npm run lint --workspace apps/web && npm run lint --workspace apps/api",
     "test": "npm run test --workspace apps/web && npm run test --workspace apps/api"
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.18.0",
+    "prisma": "^6.18.0"
   }
 }
