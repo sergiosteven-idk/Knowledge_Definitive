@@ -2,20 +2,20 @@
   --font-family-base: 'Montserrat', 'Segoe UI', sans-serif;
   --font-family-heading: 'Poppins', 'Segoe UI', sans-serif;
 
-  --color-primary: #203864;
-  --color-primary-strong: #12264a;
-  --color-secondary: #f5a623;
-  --color-accent: #2ba6cb;
-  --color-success: #22863a;
-  --color-warning: #b08800;
-  --color-danger: #d93025;
-  --color-info: #2563eb;
-  --color-background: #f7f9fc;
+  --color-primary: #6b46c1;
+  --color-primary-strong: #4c1d95;
+  --color-secondary: #10b981;
+  --color-accent: #8b5cf6;
+  --color-success: #0ea5e9;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #6366f1;
+  --color-background: #f5f3ff;
   --color-surface: #ffffff;
-  --color-surface-alt: #eef2f8;
-  --color-text: #1f2933;
-  --color-muted: #6c7a89;
-  --color-border: rgba(32, 56, 100, 0.12);
+  --color-surface-alt: #ede9fe;
+  --color-text: #1f2937;
+  --color-muted: #6b7280;
+  --color-border: rgba(76, 29, 149, 0.18);
 
   --color-contrast-high: #0b0d17;
   --color-contrast-invert: #f9fafb;
