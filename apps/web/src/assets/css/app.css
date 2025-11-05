@@ -1,0 +1,36 @@
+.card {
+  @apply rounded-2xl bg-surface p-6 shadow-md transition hover:-translate-y-1 hover:shadow-lg;
+}
+
+.badge {
+  @apply inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-primary-strong focus-visible:focus-outline;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-full border border-primary px-6 py-3 font-semibold text-primary shadow-sm transition hover:bg-primary/10 focus-visible:focus-outline;
+}
+
+.prose {
+  color: inherit;
+  max-width: 65ch;
+}
+
+.prose h2,
+.prose h3 {
+  font-family: var(--font-family-heading);
+  color: var(--color-primary-strong);
+}
+
+.prose a {
+  color: var(--color-accent);
+  text-decoration-thickness: 2px;
+}
+
+.prose ul {
+  list-style: disc;
+  margin-left: 1.5rem;
+}

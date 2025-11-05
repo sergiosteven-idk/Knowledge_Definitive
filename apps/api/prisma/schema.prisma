@@ -1,0 +1,228 @@
+// Prisma schema adaptada al esquema SQL proporcionado
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum TipoAdmin {
+  super
+  editor
+  moderador
+}
+
+enum TipoUsuario {
+  estudiante
+  docente
+  invitado
+}
+
+enum MetodoPago {
+  tarjeta
+  paypal
+  transferencia
+}
+
+enum NivelCurso {
+  basico      @map("básico")
+  intermedio
+  avanzado
+}
+
+enum TipoEvaluacion {
+  quiz
+  examen
+  practica    @map("práctica")
+}
+
+enum TipoPregunta {
+  opcion_multiple
+  verdadero_falso
+  respuesta_abierta
+}
+
+enum EstadoProgreso {
+  pendiente
+  en_progreso   @map("en progreso")
+  completado
+}
+
+model Administrador {
+  idAdmin   Int          @id @default(autoincrement()) @map("id_admin")
+  nombre    String
+  correo    String       @unique
+  contrasena String
+  tipoAdmin TipoAdmin    @default(editor) @map("tipo_admin")
+  miembros  Miembro[]
+
+  @@map("Administrador")
+}
+
+model Miembro {
+  idUsuario    Int                @id @default(autoincrement()) @map("id_usuario")
+  nombre       String
+  apellido     String
+  correo       String             @unique
+  contrasena   String
+  tipoUsuario  TipoUsuario        @default(estudiante) @map("tipo_usuario")
+  idAdmin      Int?               @map("id_admin")
+  admin        Administrador?     @relation(fields: [idAdmin], references: [idAdmin])
+  roles        UsuarioRol[]
+  donaciones   Donaciones[]
+  progresos    Progreso[]
+  resultados   Resultado[]
+  refreshTokens RefreshToken[]
+  seguridad    MiembroSeguridad?
+
+  @@map("Miembro")
+}
+
+model MiembroSeguridad {
+  idSeguridad     Int       @id @default(autoincrement()) @map("id_seguridad")
+  miembroId       Int       @unique @map("id_usuario")
+  intentosFallidos Int      @default(0) @map("intentos_fallidos")
+  bloqueadoHasta  DateTime? @map("bloqueado_hasta")
+  miembro         Miembro   @relation(fields: [miembroId], references: [idUsuario])
+
+  @@map("Miembro_Seguridad")
+}
+
+model Rol {
+  idRol       Int          @id @default(autoincrement()) @map("id_rol")
+  nombreRol   String       @unique @map("nombre_rol")
+  descripcion String?
+  usuarios    UsuarioRol[]
+  permisos    RolPermiso[]
+
+  @@map("Rol")
+}
+
+model Permiso {
+  idPermiso Int          @id @default(autoincrement()) @map("id_permiso")
+  accion    String
+  recurso   String
+  roles     RolPermiso[]
+
+  @@unique([accion, recurso], name: "accion_recurso")
+  @@map("Permiso")
+}
+
+model RolPermiso {
+  idRol     Int
+  idPermiso Int
+  rol       Rol      @relation(fields: [idRol], references: [idRol])
+  permiso   Permiso  @relation(fields: [idPermiso], references: [idPermiso])
+
+  @@id([idRol, idPermiso])
+  @@map("Rol_Permiso")
+}
+
+model UsuarioRol {
+  idUsuario Int
+  idRol     Int
+  miembro   Miembro @relation(fields: [idUsuario], references: [idUsuario])
+  rol       Rol     @relation(fields: [idRol], references: [idRol])
+
+  @@id([idUsuario, idRol])
+  @@map("Usuario_Rol")
+}
+
+model Donaciones {
+  idDonacion    Int         @id @default(autoincrement()) @map("id_donacion")
+  idUsuario     Int         @map("id_usuario")
+  monto         Decimal     @db.Decimal(10, 2)
+  fechaDonacion DateTime?   @default(now()) @map("fecha_donacion")
+  metodoPago    MetodoPago?
+  usuario       Miembro     @relation(fields: [idUsuario], references: [idUsuario])
+
+  @@map("Donaciones")
+}
+
+model Curso {
+  idCurso     Int           @id @default(autoincrement()) @map("id_curso")
+  nombre      String
+  descripcion String?
+  categoria   String?
+  nivel       NivelCurso    @default(basico)
+  fechaInicio DateTime?     @map("fecha_inicio")
+  fechaFin    DateTime?     @map("fecha_fin")
+  modulos     Modulo[]
+
+  @@map("Curso")
+}
+
+model Modulo {
+  idModulo     Int        @id @default(autoincrement()) @map("id_modulo")
+  nombreModulo String     @map("nombre_modulo")
+  descripcion  String?
+  idCurso      Int        @map("id_curso")
+  curso        Curso      @relation(fields: [idCurso], references: [idCurso])
+  progresos    Progreso[]
+  evaluaciones Evaluacion[]
+
+  @@map("Modulo")
+}
+
+model Progreso {
+  idProgreso         Int            @id @default(autoincrement()) @map("id_progreso")
+  idUsuario          Int            @map("id_usuario")
+  idModulo           Int            @map("id_modulo")
+  estado             EstadoProgreso @default(pendiente)
+  ultimaModificacion DateTime?      @default(now()) @map("ultima_modificacion")
+  usuario            Miembro        @relation(fields: [idUsuario], references: [idUsuario])
+  modulo             Modulo         @relation(fields: [idModulo], references: [idModulo])
+
+  @@map("Progreso")
+}
+
+model Evaluacion {
+  idEvaluacion Int            @id @default(autoincrement()) @map("id_evaluacion")
+  nombre       String
+  descripcion  String?
+  tipo         TipoEvaluacion @default(quiz)
+  idModulo     Int            @map("id_modulo")
+  modulo       Modulo         @relation(fields: [idModulo], references: [idModulo])
+  preguntas    Pregunta[]
+  resultados   Resultado[]
+
+  @@map("Evaluacion")
+}
+
+model Pregunta {
+  idPregunta        Int           @id @default(autoincrement()) @map("id_pregunta")
+  texto             String
+  tipo              TipoPregunta?
+  opciones          Json?
+  respuestaCorrecta String?       @map("respuesta_correcta")
+  idEvaluacion      Int           @map("id_evaluacion")
+  evaluacion        Evaluacion    @relation(fields: [idEvaluacion], references: [idEvaluacion])
+
+  @@map("Pregunta")
+}
+
+model Resultado {
+  idResultado     Int       @id @default(autoincrement()) @map("id_resultado")
+  idUsuario       Int       @map("id_usuario")
+  idEvaluacion    Int       @map("id_evaluacion")
+  calificacion    Decimal?  @db.Decimal(5, 2)
+  fechaRealizacion DateTime? @default(now()) @map("fecha_realizacion")
+  usuario         Miembro    @relation(fields: [idUsuario], references: [idUsuario])
+  evaluacion      Evaluacion @relation(fields: [idEvaluacion], references: [idEvaluacion])
+
+  @@map("Resultado")
+}
+
+model RefreshToken {
+  id         Int      @id @default(autoincrement())
+  token      String   @unique
+  miembroId  Int      @map("id_usuario")
+  expiresAt  DateTime
+  creadoEn   DateTime @default(now()) @map("creado_en")
+  miembro    Miembro  @relation(fields: [miembroId], references: [idUsuario])
+
+  @@map("RefreshToken")
+}
