@@ -1,119 +1,239 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { z } from 'zod';
-import Section from '../components/ui/Section.jsx';
-import FormField from '../components/forms/FormField.jsx';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useRegister } from '../hooks/useAuth.js';
+import '../assets/css/auth.css';
 
-const schema = z
-  .object({
-    nombre: z.string().min(2, 'Ingresa tu nombre completo'),
-    apellido: z.string().min(2, 'Ingresa tu apellido'),
-    email: z.string().email('Correo electrónico inválido'),
-    password: z.string().min(8, 'La contraseña debe tener mínimo 8 caracteres'),
-    confirmPassword: z.string()
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Las contraseñas no coinciden',
-    path: ['confirmPassword']
-  });
+const nameRegex = /^[a-zA-ZÁÉÍÓÚáéíóúñÑ\s'-]{2,50}$/;
+const emailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
 
 const Signup = () => {
-  const [errors, setErrors] = useState({});
-  const register = useRegister();
+  const [form, setForm] = useState({ nombre: '', apellido: '', email: '', password: '', confirmPassword: '' });
+  const [errors, setErrors] = useState({ nombre: '', apellido: '', email: '', password: '', confirmPassword: '', general: '' });
+  const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+  const timeoutRef = useRef(null);
 
-  const handleSubmit = async (event) => {
+  const { mutate: register, isPending, error } = useRegister();
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  const onChange = (event) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const validate = useCallback(() => {
+    const nextErrors = { nombre: '', apellido: '', email: '', password: '', confirmPassword: '', general: '' };
+    let valid = true;
+
+    if (!nameRegex.test(form.nombre)) {
+      nextErrors.nombre = 'Nombre inválido. Usa solo letras y un mínimo de 2 caracteres.';
+      valid = false;
+    }
+
+    if (!nameRegex.test(form.apellido)) {
+      nextErrors.apellido = 'Apellido inválido. Usa solo letras y un mínimo de 2 caracteres.';
+      valid = false;
+    }
+
+    if (!emailRegex.test(form.email)) {
+      nextErrors.email = 'Correo electrónico inválido.';
+      valid = false;
+    }
+
+    if (form.password.length < 6 || !/[a-zA-Z]/.test(form.password) || !/[0-9]/.test(form.password)) {
+      nextErrors.password = 'Mínimo 6 caracteres, combinando letras y números.';
+      valid = false;
+    }
+
+    if (form.confirmPassword !== form.password) {
+      nextErrors.confirmPassword = 'Las contraseñas no coinciden.';
+      valid = false;
+    }
+
+    setErrors(nextErrors);
+    return valid;
+  }, [form]);
+
+  const handleSubmit = (event) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const values = Object.fromEntries(formData.entries());
+    if (!validate()) return;
 
-    const result = schema.safeParse(values);
-    if (!result.success) {
-      const formatted = result.error.flatten().fieldErrors;
-      setErrors(Object.fromEntries(Object.entries(formatted).map(([key, value]) => [key, value?.[0]])));
-      return;
-    }
+    setErrors((prev) => ({ ...prev, general: '' }));
+    setMessage('');
 
-    try {
-      await register.mutateAsync({
-        nombre: values.nombre,
-        apellido: values.apellido,
-        email: values.email,
-        password: values.password
-      });
-      navigate('/cursos', { replace: true });
-    } catch (error) {
-      setErrors({ form: 'No pudimos registrar tu cuenta. Inténtalo de nuevo.' });
-    }
+    register(
+      { nombre: form.nombre, apellido: form.apellido, email: form.email, password: form.password },
+      {
+        onSuccess: () => {
+          setMessage('✅ Registro exitoso, redirigiendo…');
+          const searchParams = new URLSearchParams(location.search);
+          const redirectTo = searchParams.get('next') || '/cursos';
+          timeoutRef.current = setTimeout(() => {
+            navigate(redirectTo, { replace: true });
+          }, 1200);
+        },
+        onError: (err) => {
+          setErrors((prev) => ({
+            ...prev,
+            general: err?.response?.data?.message || 'Error en el registro. Intenta nuevamente.'
+          }));
+        }
+      }
+    );
   };
 
   return (
-    <Section
-      id="signup"
-      title="Crea tu cuenta"
-      description="Únete a la comunidad Knowledge Definitive y personaliza tu experiencia."
-    >
-      <form className="mx-auto max-w-xl space-y-6" onSubmit={handleSubmit} noValidate>
-        {errors.form && (
-          <div role="alert" className="rounded-md bg-danger/10 px-4 py-3 text-sm text-danger">
-            {errors.form}
+    <div className="auth-wrapper">
+      <div className="auth-container">
+        <div className="auth-card" role="form" aria-labelledby="signup-title">
+          <div className="auth-logo" aria-hidden="true">
+            <span role="img" aria-label="Graduación">
+              🎓
+            </span>
+            Knowledge Definitive
           </div>
-        )}
-        <FormField
-          id="nombre"
-          name="nombre"
-          label="Nombre completo"
-          autoComplete="name"
-          error={errors.nombre}
-          required
-        />
-        <FormField
-          id="apellido"
-          name="apellido"
-          label="Apellido"
-          autoComplete="family-name"
-          error={errors.apellido}
-          required
-        />
-        <FormField
-          id="email"
-          name="email"
-          type="email"
-          label="Correo electrónico"
-          autoComplete="email"
-          error={errors.email}
-          required
-        />
-        <FormField
-          id="password"
-          name="password"
-          type="password"
-          label="Contraseña"
-          autoComplete="new-password"
-          error={errors.password}
-          required
-        />
-        <FormField
-          id="confirmPassword"
-          name="confirmPassword"
-          type="password"
-          label="Confirma tu contraseña"
-          autoComplete="new-password"
-          error={errors.confirmPassword}
-          required
-        />
-        <button type="submit" className="btn-primary w-full justify-center" disabled={register.isPending}>
-          {register.isPending ? 'Creando cuenta…' : 'Crear cuenta'}
-        </button>
-        <p className="text-center text-sm text-muted">
-          ¿Ya tienes cuenta?{' '}
-          <Link to="/login" className="text-accent underline">
-            Inicia sesión
-          </Link>
-        </p>
-      </form>
-    </Section>
+          <h2 id="signup-title">Crear cuenta</h2>
+          <p className="subtitle">Únete a la comunidad Knowledge y personaliza tu aprendizaje accesible.</p>
+
+          {(errors.general || error) && (
+            <div className="general-error" role="alert" aria-live="assertive">
+              {errors.general || error?.response?.data?.message || 'Ocurrió un error.'}
+            </div>
+          )}
+
+          <form className="signup-form" onSubmit={handleSubmit} noValidate>
+            <div className="form-group">
+              <label htmlFor="nombre" className="form-label">
+                Nombre
+              </label>
+              <input
+                id="nombre"
+                name="nombre"
+                className="form-input"
+                autoComplete="given-name"
+                value={form.nombre}
+                onChange={onChange}
+                required
+                aria-invalid={Boolean(errors.nombre)}
+                aria-describedby="nombre-error"
+              />
+              <span id="nombre-error" className="error-message">
+                {errors.nombre}
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="apellido" className="form-label">
+                Apellido
+              </label>
+              <input
+                id="apellido"
+                name="apellido"
+                className="form-input"
+                autoComplete="family-name"
+                value={form.apellido}
+                onChange={onChange}
+                required
+                aria-invalid={Boolean(errors.apellido)}
+                aria-describedby="apellido-error"
+              />
+              <span id="apellido-error" className="error-message">
+                {errors.apellido}
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="email" className="form-label">
+                Correo electrónico
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                className="form-input"
+                autoComplete="email"
+                value={form.email}
+                onChange={onChange}
+                required
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby="email-error"
+              />
+              <span id="email-error" className="error-message">
+                {errors.email}
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">
+                Contraseña
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                className="form-input"
+                autoComplete="new-password"
+                value={form.password}
+                onChange={onChange}
+                required
+                aria-invalid={Boolean(errors.password)}
+                aria-describedby="password-error"
+                minLength={6}
+                maxLength={120}
+              />
+              <span id="password-error" className="error-message">
+                {errors.password}
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="confirmPassword" className="form-label">
+                Confirmar contraseña
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                className="form-input"
+                autoComplete="new-password"
+                value={form.confirmPassword}
+                onChange={onChange}
+                required
+                aria-invalid={Boolean(errors.confirmPassword)}
+                aria-describedby="confirm-password-error"
+                minLength={6}
+                maxLength={120}
+              />
+              <span id="confirm-password-error" className="error-message">
+                {errors.confirmPassword}
+              </span>
+            </div>
+
+            <button type="submit" className="signup-btn" disabled={isPending} aria-busy={isPending}>
+              {isPending ? 'Registrando…' : 'Registrarse'}
+            </button>
+          </form>
+
+          {message && (
+            <p className="signup-message" role="status" aria-live="polite">
+              {message}
+            </p>
+          )}
+
+          <div className="login-section">
+            <Link to="/login" className="login-link">
+              ¿Ya tienes cuenta? Inicia sesión
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

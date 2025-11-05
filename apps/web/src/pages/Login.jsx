@@ -1,87 +1,163 @@
-import { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { z } from 'zod';
-import FormField from '../components/forms/FormField.jsx';
-import Section from '../components/ui/Section.jsx';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLogin } from '../hooks/useAuth.js';
+import '../assets/css/auth.css';
 
-const schema = z.object({
-  email: z.string().email('Ingresa un correo válido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres')
-});
+const emailRegex = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
 
 const Login = () => {
-  const [errors, setErrors] = useState({});
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [errors, setErrors] = useState({ email: '', password: '', general: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const login = useLogin();
+  const timeoutRef = useRef(null);
 
-  const handleSubmit = async (event) => {
+  const { mutate: login, isPending, error } = useLogin();
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  const onChange = (event) => {
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const validate = useCallback(() => {
+    const validation = { email: '', password: '', general: '' };
+    let valid = true;
+
+    if (!emailRegex.test(form.email)) {
+      validation.email = 'El correo no tiene un formato válido.';
+      valid = false;
+    }
+
+    if (form.password.length < 6 || !/[a-zA-Z]/.test(form.password) || !/[0-9]/.test(form.password)) {
+      validation.password = 'Debe tener al menos 6 caracteres, con letras y números.';
+      valid = false;
+    }
+
+    setErrors(validation);
+    return valid;
+  }, [form.email, form.password]);
+
+  const handleSubmit = (event) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const values = Object.fromEntries(formData.entries());
+    if (!validate()) return;
 
-    const result = schema.safeParse(values);
-    if (!result.success) {
-      const formatted = result.error.flatten().fieldErrors;
-      setErrors(Object.fromEntries(Object.entries(formatted).map(([key, value]) => [key, value?.[0]])));
-      return;
-    }
+    setErrors({ email: '', password: '', general: '' });
 
-    try {
-      await login.mutateAsync(values);
-      const redirectTo = location.state?.from?.pathname || '/cursos';
-      navigate(redirectTo, { replace: true });
-    } catch (error) {
-      setErrors({ form: 'Credenciales inválidas o cuenta bloqueada temporalmente.' });
-    }
+    login(
+      { email: form.email, password: form.password },
+      {
+        onSuccess: () => {
+          const searchParams = new URLSearchParams(location.search);
+          const redirectTo = searchParams.get('next') || location.state?.from?.pathname || '/cursos';
+          timeoutRef.current = setTimeout(() => {
+            navigate(redirectTo, { replace: true });
+          }, 200);
+        },
+        onError: (err) => {
+          setErrors((prev) => ({
+            ...prev,
+            general: err?.response?.data?.message || 'Credenciales incorrectas o servidor no disponible.'
+          }));
+        }
+      }
+    );
   };
 
   return (
-    <Section
-      id="login"
-      title="Inicia sesión"
-      description="Accede a tus cursos, progreso y recursos personalizados."
-    >
-      <form className="mx-auto max-w-xl space-y-6" onSubmit={handleSubmit} noValidate>
-        {errors.form && (
-          <div role="alert" className="rounded-md bg-danger/10 px-4 py-3 text-sm text-danger">
-            {errors.form}
+    <div className="auth-wrapper">
+      <div className="auth-container">
+        <div className="auth-card" role="form" aria-labelledby="login-title">
+          <div className="auth-logo" aria-hidden="true">
+            <span role="img" aria-label="Graduación">
+              🎓
+            </span>
+            Knowledge Definitive
           </div>
-        )}
-        <FormField
-          id="email"
-          name="email"
-          type="email"
-          label="Correo electrónico"
-          autoComplete="email"
-          error={errors.email}
-          required
-        />
-        <FormField
-          id="password"
-          name="password"
-          type="password"
-          label="Contraseña"
-          autoComplete="current-password"
-          error={errors.password}
-          required
-        />
-        <button
-          type="submit"
-          className="btn-primary w-full justify-center"
-          disabled={login.isPending}
-        >
-          {login.isPending ? 'Ingresando…' : 'Ingresar'}
-        </button>
-        <p className="text-center text-sm text-muted">
-          ¿No tienes cuenta?{' '}
-          <Link to="/signup" className="text-accent underline">
-            Regístrate aquí
-          </Link>
-        </p>
-      </form>
-    </Section>
+          <h2 id="login-title">Iniciar sesión</h2>
+          <p className="subtitle">Accede a tus cursos, progreso y herramientas personalizadas.</p>
+
+          {(errors.general || error) && (
+            <div className="general-error" role="alert" aria-live="assertive">
+              {errors.general || error?.response?.data?.message || 'Ocurrió un error.'}
+            </div>
+          )}
+
+          <form className="login-form" onSubmit={handleSubmit} noValidate>
+            <div className="form-group">
+              <label htmlFor="email" className="form-label">
+                Correo electrónico
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                className="form-input"
+                autoComplete="email"
+                maxLength={80}
+                value={form.email}
+                onChange={onChange}
+                required
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby="email-error"
+              />
+              <span id="email-error" className="error-message">
+                {errors.email}
+              </span>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password" className="form-label">
+                Contraseña
+              </label>
+              <div className="password-container">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  className="form-input"
+                  autoComplete="current-password"
+                  minLength={6}
+                  maxLength={120}
+                  value={form.password}
+                  onChange={onChange}
+                  required
+                  aria-invalid={Boolean(errors.password)}
+                  aria-describedby="password-error"
+                />
+                <button
+                  type="button"
+                  className="toggle-password"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
+              <span id="password-error" className="error-message">
+                {errors.password}
+              </span>
+            </div>
+
+            <button type="submit" className="login-btn" disabled={isPending} aria-busy={isPending}>
+              {isPending ? 'Validando…' : 'Iniciar sesión'}
+            </button>
+
+            <div className="login-section">
+              <Link to="/signup" className="login-link">
+                ¿No tienes cuenta? Regístrate
+              </Link>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 };
 

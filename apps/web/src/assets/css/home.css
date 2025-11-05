@@ -1,0 +1,319 @@
+.home-container {
+  font-family: 'Segoe UI', sans-serif;
+  color: var(--color-text);
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.08), #ffffff 55%);
+}
+
+.home-container :focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
+.home-container section {
+  scroll-margin-top: 120px;
+}
+
+.hero {
+  position: relative;
+  text-align: center;
+  padding: 110px 20px 90px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  color: #ffffff;
+  border-radius: 0 0 48px 48px;
+  box-shadow: 0 18px 55px rgba(76, 29, 149, 0.28);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: -60%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  transform: rotate(45deg);
+  animation: heroShine 7s linear infinite;
+  opacity: 0.8;
+}
+
+@keyframes heroShine {
+  0%,
+  100% {
+    transform: translate(-100%, -100%) rotate(45deg);
+  }
+  50% {
+    transform: translate(120%, 120%) rotate(45deg);
+  }
+}
+
+.hero h1 {
+  font-size: clamp(2.3rem, 5vw, 3.4rem);
+  margin-bottom: 22px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.hero .highlight {
+  color: var(--color-secondary);
+}
+
+.hero p {
+  font-size: clamp(1.1rem, 2.2vw, 1.35rem);
+  max-width: 760px;
+  margin: 0 auto 46px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.hero-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  z-index: 1;
+  position: relative;
+}
+
+.hero-buttons button {
+  background: #ffffff;
+  color: var(--color-primary-strong);
+  border: none;
+  padding: 15px 28px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(17, 24, 39, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.hero-buttons button:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px rgba(17, 24, 39, 0.25);
+  background: #f9f9ff;
+}
+
+.hero-buttons button:active {
+  transform: translateY(-1px);
+}
+
+.hero-buttons button:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.talkback-btn {
+  background: var(--color-secondary) !important;
+  color: var(--color-contrast-invert) !important;
+}
+
+.talkback-btn:hover {
+  background: #0f9a6a !important;
+  color: #ffffff !important;
+}
+
+.section {
+  padding: 90px 24px;
+  max-width: 1080px;
+  margin: 0 auto;
+  text-align: center;
+  animation: fadeInUp 0.85s ease both;
+}
+
+.section.alt {
+  background: rgba(139, 92, 246, 0.08);
+  border-radius: 28px;
+  box-shadow: 0 16px 40px rgba(76, 29, 149, 0.12);
+}
+
+.section h2 {
+  font-size: clamp(2rem, 3vw, 2.4rem);
+  color: var(--color-primary-strong);
+  margin-bottom: 24px;
+  font-weight: 700;
+}
+
+.section p,
+.section ul {
+  font-size: 1.1rem;
+  line-height: 1.75;
+  color: var(--color-muted);
+  margin: 0 auto;
+  max-width: 860px;
+}
+
+.section ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 28px;
+}
+
+.section ul li {
+  background: #ffffff;
+  margin: 14px 0;
+  padding: 16px 22px;
+  border-radius: 18px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+.section ul li strong {
+  color: var(--color-primary-strong);
+}
+
+.section ul li:hover {
+  transform: translateX(6px);
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.14);
+}
+
+.section .stats {
+  display: grid;
+  gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-top: 36px;
+}
+
+.section .stat-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(237, 233, 254, 0.9));
+  border-radius: 24px;
+  padding: 32px 24px;
+  box-shadow: 0 16px 30px rgba(76, 29, 149, 0.12);
+  color: var(--color-primary-strong);
+}
+
+.section .stat-card p {
+  margin: 0;
+}
+
+.section .stat-value {
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: var(--color-accent);
+}
+
+.section .stat-label {
+  margin-top: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+.cta-section {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(139, 92, 246, 0.2));
+  border-radius: 32px;
+  padding: 70px 24px;
+  margin-bottom: 90px;
+  box-shadow: 0 16px 32px rgba(16, 185, 129, 0.12);
+}
+
+.cta-section h2 {
+  font-size: clamp(2.1rem, 4vw, 2.8rem);
+  color: var(--color-primary-strong);
+}
+
+.cta-section p {
+  font-size: 1.1rem;
+  color: var(--color-text);
+  max-width: 780px;
+  margin: 0 auto 32px;
+}
+
+.cta-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+}
+
+.cta-links a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 28px;
+  border-radius: 999px;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.cta-links a.primary {
+  background: var(--color-secondary);
+  color: var(--color-primary-strong);
+  box-shadow: 0 12px 25px rgba(16, 185, 129, 0.25);
+}
+
+.cta-links a.primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 30px rgba(16, 185, 129, 0.32);
+}
+
+.cta-links a.secondary {
+  background: #ffffff;
+  color: var(--color-primary-strong);
+  border: 2px solid rgba(139, 92, 246, 0.25);
+}
+
+.cta-links a.secondary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 28px rgba(76, 29, 149, 0.18);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .hero {
+    border-radius: 0 0 32px 32px;
+    padding: 80px 16px 70px;
+  }
+
+  .hero p {
+    margin-bottom: 36px;
+  }
+
+  .section {
+    padding: 70px 18px;
+  }
+
+  .section ul li {
+    text-align: left;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-buttons button {
+    width: 100%;
+  }
+
+  .section {
+    padding: 60px 16px;
+  }
+
+  .cta-section {
+    margin-bottom: 70px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero,
+  .section {
+    animation: none;
+  }
+
+  .hero::before {
+    animation: none;
+  }
+
+  .hero-buttons button,
+  .cta-links a {
+    transition: none;
+  }
+}

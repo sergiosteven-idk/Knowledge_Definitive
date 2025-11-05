@@ -44,21 +44,41 @@ const Navbar = () => {
   const navLinkClasses = ({ isActive }) =>
     clsx(
       'rounded-full px-4 py-2 text-sm font-semibold transition focus-visible:focus-outline',
-      isActive ? 'bg-primary text-white' : 'text-primary hover:bg-primary/10'
+      open
+        ? isActive
+          ? 'bg-primary text-white shadow-sm'
+          : 'text-primary-strong hover:bg-primary/10'
+        : isActive
+          ? 'bg-white/25 text-white shadow-sm'
+          : 'text-white/90 hover:bg-white/15'
     );
+
+  const authLinkClasses = (variant = 'secondary') => {
+    const base = 'inline-flex items-center justify-center rounded-full px-5 py-2 text-sm font-semibold transition focus-visible:focus-outline';
+
+    if (variant === 'primary') {
+      return clsx(base, open ? 'bg-primary text-white hover:bg-primary-strong shadow-sm' : 'bg-secondary text-primary-strong hover:bg-secondary/90 shadow-sm');
+    }
+
+    if (variant === 'ghost') {
+      return clsx(base, open ? 'text-primary-strong hover:bg-primary/10' : 'text-white/80 hover:bg-white/15');
+    }
+
+    return clsx(base, open ? 'border border-primary text-primary-strong hover:bg-primary/10' : 'border border-white/70 text-white hover:bg-white/20');
+  };
 
   return (
     <header
-      className="sticky top-0 z-40 bg-surface/95 backdrop-blur"
-      style={{ borderBottom: '1px solid var(--color-border)' }}
+      className="sticky top-0 z-40 text-white shadow-md"
+      style={{ background: 'linear-gradient(120deg, var(--color-primary-strong), var(--color-primary))' }}
     >
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4" aria-label="Principal" ref={menuRef}>
-        <Link to="/" className="flex items-center gap-2 text-lg font-bold text-primary-strong" aria-label="Ir a inicio">
+        <Link to="/" className="flex items-center gap-2 text-lg font-bold" aria-label="Ir a inicio">
           <span aria-hidden="true">🎓</span> Knowledge Definitive
         </Link>
         <button
           type="button"
-          className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent px-3 py-2 text-sm font-semibold text-primary transition hover:bg-primary/10 focus-visible:focus-outline lg:hidden"
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-white/40 px-3 py-2 text-sm font-semibold text-white transition hover:bg-white/15 focus-visible:focus-outline lg:hidden"
           aria-expanded={open}
           aria-controls="menu-principal"
           onClick={() => setOpen((prev) => !prev)}
@@ -69,10 +89,12 @@ const Navbar = () => {
         <div
           id="menu-principal"
           className={clsx(
-            'absolute left-0 right-0 top-full origin-top transform bg-surface px-4 pb-6 pt-4 shadow-lg transition lg:static lg:flex lg:translate-y-0 lg:items-center lg:gap-6 lg:bg-transparent lg:p-0 lg:shadow-none',
-            open ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0 lg:opacity-100'
+            'absolute left-0 right-0 top-full origin-top transform px-4 pb-6 pt-4 transition lg:static lg:flex lg:translate-y-0 lg:items-center lg:gap-8 lg:bg-transparent lg:p-0',
+            open
+              ? 'scale-y-100 bg-white/95 text-primary-strong shadow-xl'
+              : 'scale-y-0 opacity-0 text-white lg:opacity-100'
           )}
-          style={{ transformOrigin: 'top' }}
+          style={{ transformOrigin: 'top', borderTop: open ? '1px solid rgba(107, 70, 193, 0.18)' : undefined }}
         >
           <ul className="flex flex-col gap-2 lg:flex-row">
             {links.map((link) => (
@@ -96,12 +118,15 @@ const Navbar = () => {
           >
             {profile ? (
               <>
-                <span className="text-sm text-muted" role="status">
+                <span
+                  className={clsx('text-sm font-medium', open ? 'text-primary-strong' : 'text-white/90')}
+                  role="status"
+                >
                   Hola, <strong>{profile.nombre}</strong>
                 </span>
                 <button
                   type="button"
-                  className="btn-secondary"
+                  className={authLinkClasses(open ? 'secondary' : 'ghost')}
                   onClick={handleLogout}
                 >
                   Cerrar sesión
@@ -109,10 +134,10 @@ const Navbar = () => {
               </>
             ) : (
               <div className="flex flex-col gap-3 lg:flex-row">
-                <Link to="/login" className="btn-secondary" onClick={() => setOpen(false)}>
+                <Link to="/login" className={authLinkClasses('secondary')} onClick={() => setOpen(false)}>
                   Ingresar
                 </Link>
-                <Link to="/signup" className="btn-primary" onClick={() => setOpen(false)}>
+                <Link to="/signup" className={authLinkClasses('primary')} onClick={() => setOpen(false)}>
                   Crear cuenta
                 </Link>
               </div>
