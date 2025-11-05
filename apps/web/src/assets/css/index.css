@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  font-family: var(--font-family-base);
+  background-color: var(--color-background);
+  color: var(--color-text);
+  min-height: 100vh;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+::-moz-selection {
+  background-color: var(--color-secondary);
+  color: var(--color-contrast-invert);
+}
+
+::selection {
+  background-color: var(--color-secondary);
+  color: var(--color-contrast-invert);
+}
